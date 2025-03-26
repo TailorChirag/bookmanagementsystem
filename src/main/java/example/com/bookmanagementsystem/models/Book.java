@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "books")
+@Table(name = "books", uniqueConstraints = @UniqueConstraint(columnNames = "id"))
 public class Book {
 
     @Id
