@@ -2,64 +2,75 @@ package example.com.bookmanagementsystem.controller;
 
 
 import example.com.bookmanagementsystem.models.Book;
+import example.com.bookmanagementsystem.repository.BookRepository;
 import example.com.bookmanagementsystem.service.BookService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
 
-    private final BookService bookService;
 
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
-    }
+    @Autowired
+    private  BookRepository bookRepository;
 
-    // Add Book
+
+
+    // Add Book a new book with validation
     @PostMapping
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        return ResponseEntity.ok(bookService.saveBook(book));
+    public ResponseEntity<String> addBook(@Valid @RequestBody Book book) {
+        if (bookRepository.existsByTitle(book.getTitle())) {
+            throw new DuplicateBookException("Book with this title already exists!");
+        }
+
+        // Ensure only valid status is accepted
+        if (book.getAvailabilityStatus() != Book.AvailabilityStatus.AVAILABLE &&
+                book.getAvailabilityStatus() != Book.AvailabilityStatus.CHECKED_OUT) {
+            return ResponseEntity.badRequest().body("Invalid availability status. Use AVAILABLE or CHECKED_OUT.");
+        }
+
+        bookRepository.save(book);
+        return ResponseEntity.ok("Book added successfully!");
     }
 
     // View All Books
     @GetMapping
     public List<Book> getAllBooks() {
-        return bookService.getAllBooks();
+        return bookRepository.findAll();
     }
 
-    // Search Book by ID
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBookById(@PathVariable Long id) {
-        return bookService.getBookById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<Book> book = bookRepository.findById(id);
+        return book.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Search Book by Title
-    @GetMapping("/search")
-    public List<Book> searchBooksByTitle(@RequestParam String title) {
-        return bookService.searchBooksByTitle(title);
-    }
-
-    // Update Book Details
+    // ✅ Update book details
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
-        return ResponseEntity.ok(bookService.updateBook(id, book));
+    public ResponseEntity<String> updateBook(@PathVariable Long id, @Valid @RequestBody Book updatedBook) {
+        return bookRepository.findById(id).map(book -> {
+            book.setTitle(updatedBook.getTitle());
+            book.setAuthor(updatedBook.getAuthor());
+            book.setGenre(updatedBook.getGenre());
+            book.setAvailabilityStatus(updatedBook.getAvailabilityStatus());
+            bookRepository.save(book);
+            return ResponseEntity.ok("Book updated successfully!");
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Delete Book
+    // ✅ Delete book
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
-        return ResponseEntity.ok("Book deleted successfully.");
-    }
-
-    // Exit System
-    @GetMapping("/exit")
-    public void exit() {
-        System.exit(0);
+        if (bookRepository.existsById(id)) {
+            bookRepository.deleteById(id);
+            return ResponseEntity.ok("Book deleted successfully!");
+        }
+        return ResponseEntity.notFound().build();
     }
 }
