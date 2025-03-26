@@ -4,7 +4,6 @@ package example.com.bookmanagementsystem.controller;
 import example.com.bookmanagementsystem.exception.DuplicateBookException;
 import example.com.bookmanagementsystem.models.Book;
 import example.com.bookmanagementsystem.repository.BookRepository;
-import example.com.bookmanagementsystem.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
