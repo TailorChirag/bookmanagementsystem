@@ -1,5 +1,5 @@
 ##  Docker Deployment
-	- DockerHub: [book-management-system] https://hub.docker.com/repository/docker/tailorchirag/book-management-system
+- DockerHub: [book-management-system] https://hub.docker.com/repository/docker/tailorchirag/book-management-system
  	
 
 The Book Management System is a Spring Boot-based RESTful API designed for managing books. It provides functionalities to:
